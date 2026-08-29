@@ -1,0 +1,283 @@
+/* Společný základ. Obrazovka lektora se promítá, takže všude velké písmo
+   a vysoký kontrast – musí to být čitelné z posledních řad. */
+
+:root {
+  --bg: #f5f5f4;
+  --surface: #ffffff;
+  --ink: #1c1917;
+  --ink-soft: #6b6560;
+  --line: #e0dedb;
+  --accent: #2563eb;
+  --danger: #dc2626;
+  --radius: 14px;
+
+  --opt-0: #2563eb;
+  --opt-1: #db2777;
+  --opt-2: #16a34a;
+  --opt-3: #ea580c;
+  --opt-4: #7c3aed;
+  --opt-5: #0891b2;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #fff;
+  padding: 0.7em 1.3em;
+  font-weight: 600;
+}
+button:disabled { opacity: 0.4; cursor: default; }
+button.ghost { background: transparent; color: var(--ink-soft); font-weight: 500; }
+button.ghost:hover:not(:disabled) { color: var(--ink); }
+
+input[type="text"], textarea {
+  font: inherit;
+  width: 100%;
+  padding: 0.7em 0.9em;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+}
+input[type="text"]:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.setup-warning {
+  max-width: 34rem;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 2px solid var(--danger);
+}
+.setup-warning code {
+  background: var(--bg);
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+}
+
+/* ---------- Obrazovka lektora ---------- */
+
+.host {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.host .center {
+  margin: auto;
+  text-align: center;
+  padding: 2rem;
+}
+.host .center h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.host .center p { color: var(--ink-soft); font-size: 1.1rem; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0.9rem 1.6rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.topbar .label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-soft);
+}
+.topbar .code {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  line-height: 1.1;
+}
+.topbar .url { font-size: 1.25rem; font-weight: 600; line-height: 1.1; }
+.topbar .spacer { flex: 1; }
+.topbar .count { font-size: 2rem; font-weight: 800; line-height: 1.1; }
+
+.board {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem 2.5rem;
+}
+.board .question {
+  font-size: clamp(1.8rem, 3.4vw, 3rem);
+  line-height: 1.15;
+  margin: 0 0 1.5rem;
+}
+.board .waiting {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.board .waiting strong { font-size: 2rem; color: var(--ink); }
+
+/* Výsledky – vodorovné sloupce */
+.bar-row { margin-bottom: 1.4rem; }
+.bar-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+  margin-bottom: 0.4rem;
+}
+.bar-head .letter {
+  font-weight: 800;
+  width: 1.4em;
+  flex: none;
+  color: var(--c);
+}
+.bar-head .text { font-weight: 600; flex: 1; }
+.bar-head .num { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+.bar-track {
+  height: 2.4rem;
+  background: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  background: var(--c);
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+.voters {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.voters span {
+  font-size: 0.95rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.12em 0.7em;
+  color: var(--ink-soft);
+}
+
+/* Spodní lišta pro psaní otázky – schválně nízká, ať na plátně nekřičí */
+.composer {
+  flex: none;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding: 0.8rem 1.6rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-size: 0.95rem;
+}
+.composer .fields { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.composer .options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.composer .opt { display: flex; align-items: center; gap: 0.35rem; flex: 1 1 12rem; }
+.composer .opt .letter { font-weight: 800; color: var(--ink-soft); }
+.composer .actions { display: flex; flex-direction: column; gap: 0.4rem; }
+.composer input[type="text"] { padding: 0.45em 0.7em; border-width: 1px; }
+
+/* ---------- Obrazovka účastníka ---------- */
+
+.join {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.2rem;
+}
+.join [data-screen] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 32rem;
+  width: 100%;
+  margin: 0 auto;
+}
+.join [data-screen][hidden] { display: none; }
+.join h1 { font-size: 1.7rem; margin: 0; }
+.join p.hint { color: var(--ink-soft); margin: 0; }
+.join .code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+}
+.join .error { color: var(--danger); font-weight: 600; margin: 0; }
+
+.whoami {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  padding-bottom: 0.8rem;
+}
+.whoami strong { color: var(--ink); }
+.whoami .spacer { flex: 1; }
+
+.vote-question {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+.choices { display: flex; flex-direction: column; gap: 0.7rem; }
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  padding: 1.1rem 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.choice .letter {
+  font-size: 1.5rem;
+  font-weight: 800;
+  width: 1.3em;
+  flex: none;
+  color: var(--c);
+}
+.choice[aria-pressed="true"] {
+  border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 12%, var(--surface));
+}
+.choice:disabled { opacity: 0.55; }
+
+.status {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+  margin: 0.4rem 0 0;
+}
+
+/* Wrapper obrazovky lektora nesmí rozbít sloupcový layout body */
+#screen-stage { display: contents; }
+#screen-stage[hidden] { display: none; }

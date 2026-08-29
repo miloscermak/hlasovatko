@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hlasovátko</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="join">
+
+<div id="screen-code" data-screen hidden>
+  <h1>Hlasovátko</h1>
+  <p class="hint">Zadej kód, který vidíš na plátně.</p>
+  <input type="text" id="in-code" class="code-input" maxlength="4" autocomplete="off"
+         autocapitalize="characters" spellcheck="false" placeholder="····">
+  <p class="error" id="code-error" hidden></p>
+  <button id="btn-code">Pokračovat</button>
+</div>
+
+<div id="screen-name" data-screen hidden>
+  <h1>Jak ti máme říkat?</h1>
+  <p class="hint">Jméno uvidí lektor u tvých hlasů.</p>
+  <input type="text" id="in-name" maxlength="30" autocomplete="name" placeholder="Tvoje jméno">
+  <button id="btn-name">Vstoupit</button>
+</div>
+
+<div id="screen-vote" data-screen hidden>
+  <div class="whoami">
+    <span>Přihlášen jako <strong id="out-name"></strong></span>
+    <span class="spacer"></span>
+    <button class="ghost" id="btn-leave">Odhlásit</button>
+  </div>
+  <div id="vote-body"></div>
+</div>
+
+<script src="js/vendor/firebase-app-compat.js"></script>
+<script src="js/vendor/firebase-auth-compat.js"></script>
+<script src="js/vendor/firebase-database-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/join.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hlasovátko – lektor</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="host">
+
+<div class="center" id="screen-start" data-screen>
+  <h1>Hlasovátko</h1>
+  <p>Založ novou session pro dnešní workshop.</p>
+  <p><button id="btn-create">Založit session</button></p>
+  <p><button class="ghost" id="btn-resume" hidden></button></p>
+</div>
+
+<div id="screen-stage" data-screen hidden>
+  <header class="topbar">
+    <div>
+      <div class="label">Kód</div>
+      <div class="code" id="out-code"></div>
+    </div>
+    <div>
+      <div class="label">Připoj se na</div>
+      <div class="url" id="out-url"></div>
+    </div>
+    <div class="spacer"></div>
+    <div>
+      <div class="label">Připojeno</div>
+      <div class="count" id="out-count">0</div>
+    </div>
+  </header>
+
+  <main class="board" id="board">
+    <div class="waiting">
+      <strong>Zatím žádná otázka</strong>
+      <p>Napiš ji dole a spusť hlasování.</p>
+    </div>
+  </main>
+
+  <footer class="composer">
+    <div class="fields">
+      <input type="text" id="in-question" placeholder="Otázka, např. Je tu teplo, nebo zima?" autocomplete="off">
+      <div class="options" id="in-options"></div>
+    </div>
+    <div class="actions">
+      <button id="btn-start">Spustit hlasování</button>
+      <button class="ghost" id="btn-close" disabled>Ukončit hlasování</button>
+    </div>
+  </footer>
+</div>
+
+<script src="js/vendor/firebase-app-compat.js"></script>
+<script src="js/vendor/firebase-auth-compat.js"></script>
+<script src="js/vendor/firebase-database-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/host.js"></script>
+</body>
+</html>
