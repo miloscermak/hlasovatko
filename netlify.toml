@@ -1,0 +1,4 @@
+# Statický web bez build kroku – Netlify jen publikuje kořen repozitáře.
+[build]
+  publish = "."
+  command = ""

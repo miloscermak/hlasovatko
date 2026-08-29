@@ -38,6 +38,21 @@ npx firebase-tools deploy
 
 Deploy nahraje web i pravidla databáze. Adresa bude `https://<projekt>.web.app`.
 
+## Nasazení na Netlify
+
+Repozitář jde připojit v Netlify přes **Add new site → Import an existing project**.
+Build command nech prázdný, publish directory `.` – konfigurace už je v `netlify.toml`.
+
+Po přesunu na vlastní doménu je potřeba jedna věc navíc: ve Firebase konzoli
+**Authentication → Settings → Authorized domains** přidat tu doménu.
+Bez toho se účastníkům nemusí povést anonymní přihlášení.
+
+Pravidla databáze se přes Netlify nenasazují – ta jedou pořád přes Firebase:
+
+```bash
+npx firebase-tools deploy --only database
+```
+
 ## Jak se to používá
 
 - Lektor otevře `/host.html`, založí session, na plátně se ukáže čtyřznakový kód.
