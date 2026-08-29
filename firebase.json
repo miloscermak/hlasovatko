@@ -7,10 +7,11 @@
     "ignore": [
       "firebase.json",
       "database.rules.json",
-      "**/.*",
-      "**/node_modules/**",
       "CLAUDE.md",
-      "README.md"
+      "README.md",
+      "**/.*",
+      "**/.*/**",
+      "**/node_modules/**"
     ]
   }
 }
