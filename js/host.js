@@ -185,8 +185,11 @@ function render() {
     '</div>';
   }).join('');
 
+  // Hlasů může být teoreticky víc než připojených (starý hlas bez účastníka),
+  // ať to na plátně nevypadá jako rozbité počítání.
   var people = Object.keys(state.participants).length;
-  html += '<p class="status">Hlasovalo ' + total + ' z ' + people +
+  var tally = total > people ? 'Hlasovalo ' + total : 'Hlasovalo ' + total + ' z ' + people;
+  html += '<p class="status">' + tally +
     (q.state === 'open' ? '' : ' &middot; hlasování uzavřeno') + '</p>';
 
   $('board').innerHTML = html;

@@ -281,3 +281,6 @@ input[type="text"]:focus, textarea:focus {
 /* Wrapper obrazovky lektora nesmí rozbít sloupcový layout body */
 #screen-stage { display: contents; }
 #screen-stage[hidden] { display: none; }
+
+/* Hlasovací obrazovka drží obsah nahoře, ať se otázka nehoupe uprostřed displeje */
+#screen-vote { justify-content: flex-start; padding-top: 0.5rem; }
