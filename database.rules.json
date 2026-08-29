@@ -4,12 +4,13 @@
       "$code": {
         ".read": "auth != null",
 
-        "//": "Session smí zakládat kdokoli přihlášený, ale musí se v ní hned podepsat jako lektor. Potom už do ní zapisuje jen on.",
+        // Session smí založit kdokoli přihlášený, ale musí se v ní hned podepsat
+        // jako lektor. Od té chvíle do ní zapisuje jen on.
         ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid) || data.child('hostUid').val() === auth.uid)",
 
         "participants": {
           "$uid": {
-            "//": "Účastník zapisuje jen sám sebe.",
+            // Účastník zapisuje jen sám sebe.
             ".write": "auth != null && $uid === auth.uid",
             ".validate": "newData.hasChildren(['name', 'joinedAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 40"
           }
@@ -18,7 +19,7 @@
         "votes": {
           "$qid": {
             "$uid": {
-              "//": "Hlas smí zapsat jen jeho majitel a jen do otevřené otázky.",
+              // Hlas smí zapsat jen jeho majitel a jen do otevřené otázky.
               ".write": "auth != null && $uid === auth.uid && root.child('sessions').child($code).child('questions').child($qid).child('state').val() === 'open'",
               ".validate": "newData.hasChildren(['value', 'at'])"
             }
