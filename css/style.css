@@ -17,6 +17,14 @@
   --opt-3: #ea580c;
   --opt-4: #7c3aed;
   --opt-5: #0891b2;
+
+  --yes: #16a34a;
+  --no: #dc2626;
+  --scale-0: #dc2626;
+  --scale-1: #ea580c;
+  --scale-2: #ca8a04;
+  --scale-3: #65a30d;
+  --scale-4: #16a34a;
 }
 
 * { box-sizing: border-box; }
@@ -115,9 +123,15 @@ input[type="text"]:focus, textarea:focus {
 
 .board {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 2rem 2.5rem;
+  padding: 1.6rem 2.5rem;
+  display: flex;
+  flex-direction: column;
 }
+.board .question, .board .average, .board .status { flex: none; }
+
+.results { display: flex; flex-direction: column; gap: 0.5rem; }
 .board .question {
   font-size: clamp(1.8rem, 3.4vw, 3rem);
   line-height: 1.15;
@@ -135,7 +149,11 @@ input[type="text"]:focus, textarea:focus {
 .board .waiting strong { font-size: 2rem; color: var(--ink); }
 
 /* Výsledky – vodorovné sloupce */
-.bar-row { margin-bottom: 1.4rem; }
+.bar-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .bar-head {
   display: flex;
   align-items: baseline;
@@ -152,7 +170,8 @@ input[type="text"]:focus, textarea:focus {
 .bar-head .text { font-weight: 600; flex: 1; }
 .bar-head .num { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
 .bar-track {
-  height: 2.4rem;
+  flex: 0 1 2.4rem;
+  min-height: 1rem;
   background: var(--surface);
   border-radius: 8px;
   overflow: hidden;
@@ -164,6 +183,7 @@ input[type="text"]:focus, textarea:focus {
   transition: width 0.4s ease;
 }
 .voters {
+  flex: none;
   margin-top: 0.4rem;
   display: flex;
   flex-wrap: wrap;
@@ -284,3 +304,105 @@ input[type="text"]:focus, textarea:focus {
 
 /* Hlasovací obrazovka drží obsah nahoře, ať se otázka nehoupe uprostřed displeje */
 #screen-vote { justify-content: flex-start; padding-top: 0.5rem; }
+
+/* ---------- QR kódy ---------- */
+
+.qr-mini svg { display: block; width: 64px; height: 64px; }
+.qr-big svg { display: block; width: min(38vh, 300px); height: min(38vh, 300px); }
+
+.board .waiting .qr-big { margin-bottom: 1.2rem; }
+.board .waiting p { margin: 0.3rem 0 0; font-size: 1.1rem; }
+.board .waiting p b { color: var(--ink); letter-spacing: 0.15em; }
+.voters.names { justify-content: center; margin-top: 1.4rem; max-width: 60rem; }
+.voters.names span { font-size: 1.05rem; }
+
+/* ---------- průměr u škály ---------- */
+
+.average {
+  margin: -0.6rem 0 1.2rem;
+  font-size: 1.3rem;
+  color: var(--ink-soft);
+}
+.average strong {
+  font-size: 2.6rem;
+  color: var(--ink);
+  vertical-align: -0.15em;
+  margin-left: 0.3rem;
+}
+
+/* ---------- pruh s koncepty a historií ---------- */
+
+.strip {
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.5rem 1.6rem;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: none;
+  max-width: 16rem;
+  padding: 0.3em 0.7em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); color: var(--ink); }
+.chip .mark { font-size: 0.7em; }
+.chip .chip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip.is-draft { border-style: dashed; border-color: var(--accent); color: var(--accent); }
+.chip.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip .del { padding: 0 0.2em; font-weight: 700; }
+.chip .del:hover { color: var(--danger); }
+
+/* ---------- přepínač typu otázky ---------- */
+
+.types { display: flex; gap: 0.35rem; }
+.types .type {
+  background: var(--bg);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
+  padding: 0.25em 0.8em;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.types .type.is-on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+.composer .options[hidden] { display: none; }
+
+/* ---------- škála na mobilu ---------- */
+
+.scale-row { display: flex; gap: 0.5rem; }
+.scale-row .choice {
+  flex: 1;
+  justify-content: center;
+  padding: 1.2rem 0;
+}
+.scale-row .choice .big { font-size: 1.8rem; font-weight: 800; color: var(--c); }
+
+/* Jména hlasujících se dají schovat, když je jich na plátno moc */
+.board.hide-names .voters { display: none; }
+
+.strip { align-items: center; }
+.strip .chips { display: flex; gap: 0.4rem; overflow-x: auto; flex: 1; }
+.strip .small {
+  flex: none;
+  font-size: 0.8rem;
+  padding: 0.3em 0.7em;
+  white-space: nowrap;
+}
+
+/* Bez jmen si sloupce rozdělí výšku plátna a nikdy se nemusí scrollovat.
+   Se jmény má obsah přirozenou výšku – to už je vědomé rozhodnutí lektora. */
+.board.hide-names .results { flex: 1; min-height: 0; }
+.board.hide-names .bar-row { flex: 1 1 0; min-height: 0; overflow: hidden; }
+.board:not(.hide-names) .bar-row { flex: none; padding-bottom: 0.7rem; }

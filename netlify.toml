@@ -2,3 +2,16 @@
 [build]
   publish = "."
   command = ""
+
+# Vlastní soubory se musí vždy ověřit proti serveru, ať účastníkům
+# nezůstane v telefonu stará verze aplikace.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# Knihovny třetích stran se nemění.
+[[headers]]
+  for = "/js/vendor/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

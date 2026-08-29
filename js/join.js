@@ -151,21 +151,28 @@ function renderVote() {
   }
 
   var open = q.state === 'open';
-  var html = '<h2 class="vote-question">' + esc(q.text) + '</h2><div class="choices">';
+  var scale = q.type === 'scale';
+  var html = '<h2 class="vote-question">' + esc(q.text) + '</h2>' +
+    '<div class="' + (scale ? 'scale-row' : 'choices') + '">';
+
   (q.options || []).forEach(function (label, i) {
+    var marker = markerFor(q.type, i);
     html += '<button class="choice" data-i="' + i + '"' +
-      ' style="--c: var(--opt-' + (i % 6) + ')"' +
+      ' style="--c: ' + colorFor(q.type, i) + '"' +
       ' aria-pressed="' + (me.myVote === i) + '"' +
       (open ? '' : ' disabled') + '>' +
-      '<span class="letter">' + LETTERS[i] + '</span>' +
-      '<span>' + esc(label) + '</span></button>';
+      (scale
+        ? '<span class="big">' + esc(label) + '</span>'
+        : (marker ? '<span class="letter">' + marker + '</span>' : '') +
+          '<span>' + esc(label) + '</span>') +
+      '</button>';
   });
   html += '</div>';
 
   if (!open) {
     html += '<p class="status">Hlasování je uzavřené.</p>';
   } else if (me.myVote === null) {
-    html += '<p class="status">Vyber jednu možnost.</p>';
+    html += '<p class="status">' + (scale ? 'Vyber číslo.' : 'Vyber jednu možnost.') + '</p>';
   } else {
     html += '<p class="status">Hlas zaznamenán. Můžeš ho ještě změnit.</p>';
   }

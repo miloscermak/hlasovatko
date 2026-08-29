@@ -10,17 +10,24 @@ var state = {
   activeQid: null,
   question: null,
   votes: {},
-  participants: {}
+  participants: {},
+  questions: {},
+  type: 'choice',
+  showNames: localStorage.getItem('hlasovatko.host.names') === 'on'
 };
 var questionListeners = [];
 
 if (requireConfig()) init();
 
 function init() {
+  renderTypes();
   renderOptionInputs(2);
   $('btn-create').onclick = createSession;
   $('btn-start').onclick = startQuestion;
+  $('btn-draft').onclick = saveDraft;
   $('btn-close').onclick = closeQuestion;
+  $('btn-names').onclick = toggleNames;
+  applyNames();
   $('in-question').addEventListener('keydown', onComposerKey);
 
   signIn().then(function (uid) {
@@ -72,7 +79,8 @@ function offerResume(code) {
 function enterSession(code) {
   state.code = code;
   $('out-code').textContent = code;
-  $('out-url').textContent = joinUrl(code);
+  $('out-url').textContent = joinUrlPretty(code);
+  renderQr($('qr-mini'), joinUrl(code), 3);
   show('screen-stage');
 
   var base = db.ref('sessions/' + code);
@@ -81,6 +89,10 @@ function enterSession(code) {
     $('out-count').textContent = Object.keys(state.participants).length;
     render();
   });
+  base.child('questions').on('value', function (snap) {
+    state.questions = snap.val() || {};
+    renderStrip();
+  });
   base.child('activeQuestionId').on('value', function (snap) {
     watchQuestion(snap.val());
   });
@@ -88,8 +100,11 @@ function enterSession(code) {
 }
 
 function joinUrl(code) {
-  var base = location.href.replace(/host\.html.*$/, '').replace(/^https?:\/\//, '');
-  return base + '#' + code;
+  return location.href.replace(/host\.html.*$/, '') + '#' + code;
+}
+
+function joinUrlPretty(code) {
+  return joinUrl(code).replace(/^https?:\/\//, '');
 }
 
 /* ---------- otázky ---------- */
@@ -100,6 +115,7 @@ function watchQuestion(qid) {
   state.activeQid = qid || null;
   state.question = null;
   state.votes = {};
+  renderStrip();
   if (!qid) { render(); return; }
 
   var qRef = db.ref('sessions/' + state.code + '/questions/' + qid);
@@ -115,28 +131,51 @@ function detachQuestion() {
   questionListeners = [];
 }
 
-function startQuestion() {
+// Posbírá obsah spodní lišty. Vrací null, když něco chybí.
+function composeQuestion(questionState) {
   var text = $('in-question').value.trim();
-  var options = optionValues().filter(function (v) { return v !== ''; });
-  if (!text) { $('in-question').focus(); return; }
-  if (options.length < 2) { focusFirstEmptyOption(); return; }
+  if (!text) { $('in-question').focus(); return null; }
 
-  var qid = db.ref('sessions/' + state.code + '/questions').push().key;
-  var updates = {};
-  updates['questions/' + qid] = {
+  var def = TYPES[state.type];
+  var options = def.ownOptions
+    ? optionValues().filter(function (v) { return v !== ''; })
+    : def.options.slice();
+  if (def.ownOptions && options.length < 2) { focusFirstEmptyOption(); return null; }
+
+  return {
     text: text,
-    type: 'choice',
+    type: state.type,
     options: options,
-    state: 'open',
+    state: questionState,
     createdAt: TS
   };
-  updates['activeQuestionId'] = qid;
+}
 
-  db.ref('sessions/' + state.code).update(updates).then(function () {
-    $('in-question').value = '';
-    renderOptionInputs(2);
-    $('in-question').focus();
-  }).catch(fail);
+function startQuestion() {
+  var question = composeQuestion('open');
+  if (!question) return;
+  var qid = db.ref('sessions/' + state.code + '/questions').push().key;
+  var updates = closePrevious();
+  updates['questions/' + qid] = question;
+  updates['activeQuestionId'] = qid;
+  db.ref('sessions/' + state.code).update(updates).then(clearComposer).catch(fail);
+}
+
+// Naráz běží vždycky jen jedno hlasování – to předchozí se zavře samo.
+function closePrevious() {
+  var updates = {};
+  var current = state.questions[state.activeQid];
+  if (current && current.state === 'open') {
+    updates['questions/' + state.activeQid + '/state'] = 'closed';
+  }
+  return updates;
+}
+
+function saveDraft() {
+  var question = composeQuestion('draft');
+  if (!question) return;
+  db.ref('sessions/' + state.code + '/questions').push(question)
+    .then(clearComposer).catch(fail);
 }
 
 function closeQuestion() {
@@ -145,19 +184,48 @@ function closeQuestion() {
     .set('closed').catch(fail);
 }
 
-/* ---------- vykreslování ---------- */
+// Spustí připravený koncept.
+function publishDraft(qid) {
+  var updates = closePrevious();
+  updates['questions/' + qid + '/state'] = 'open';
+  updates['activeQuestionId'] = qid;
+  db.ref('sessions/' + state.code).update(updates).catch(fail);
+}
+
+// Vrátí na plátno starší otázku i s jejími výsledky.
+function replayQuestion(qid) {
+  db.ref('sessions/' + state.code + '/activeQuestionId').set(qid).catch(fail);
+}
+
+function deleteDraft(qid) {
+  db.ref('sessions/' + state.code + '/questions/' + qid).remove().catch(fail);
+}
+
+/* ---------- vykreslování plátna ---------- */
 
 function render() {
   var q = state.question;
   $('btn-close').disabled = !(q && q.state === 'open');
+  $('board').innerHTML = q ? resultsHtml(q) : waitingHtml();
+  applyNames();
+  if (!q) renderQr($('qr-big'), joinUrl(state.code), 6);
+}
 
-  if (!q) {
-    $('board').innerHTML =
-      '<div class="waiting"><strong>Zatím žádná otázka</strong>' +
-      '<p>Napiš ji dole a spusť hlasování.</p></div>';
-    return;
-  }
+function waitingHtml() {
+  var names = Object.keys(state.participants).map(nameOf).sort();
+  return '<div class="waiting">' +
+    '<div class="qr-big" id="qr-big"></div>' +
+    '<strong>' + esc(joinUrlPretty(state.code)) + '</strong>' +
+    '<p>Naskenuj kód, nebo ho zadej ručně: <b>' + state.code + '</b></p>' +
+    (names.length
+      ? '<div class="voters names">' + names.map(function (n) {
+          return '<span>' + esc(n) + '</span>';
+        }).join('') + '</div>'
+      : '') +
+    '</div>';
+}
 
+function resultsHtml(q) {
   var options = q.options || [];
   var byOption = options.map(function () { return []; });
   Object.keys(state.votes).forEach(function (uid) {
@@ -166,15 +234,25 @@ function render() {
   });
 
   var total = 0;
-  byOption.forEach(function (list) { total += list.length; });
+  var weighted = 0;
+  byOption.forEach(function (list, i) {
+    total += list.length;
+    weighted += list.length * (i + 1);
+  });
 
   var html = '<h1 class="question">' + esc(q.text) + '</h1>';
-  html += options.map(function (label, i) {
+  if (q.type === 'scale' && total) {
+    html += '<p class="average">Průměr <strong>' +
+      (weighted / total).toFixed(1).replace('.', ',') + '</strong></p>';
+  }
+
+  html += '<div class="results">' + options.map(function (label, i) {
     var count = byOption[i].length;
     var pct = total ? Math.round(count / total * 100) : 0;
-    return '<div class="bar-row" style="--c: var(--opt-' + (i % 6) + ')">' +
+    var marker = markerFor(q.type, i);
+    return '<div class="bar-row" style="--c: ' + colorFor(q.type, i) + '">' +
       '<div class="bar-head">' +
-        '<span class="letter">' + LETTERS[i] + '</span>' +
+        (marker ? '<span class="letter">' + marker + '</span>' : '') +
         '<span class="text">' + esc(label) + '</span>' +
         '<span class="num">' + count + ' &middot; ' + pct + ' %</span>' +
       '</div>' +
@@ -183,7 +261,7 @@ function render() {
         return '<span>' + esc(n) + '</span>';
       }).join('') + '</div>' +
     '</div>';
-  }).join('');
+  }).join('') + '</div>';
 
   // Hlasů může být teoreticky víc než připojených (starý hlas bez účastníka),
   // ať to na plátně nevypadá jako rozbité počítání.
@@ -191,8 +269,7 @@ function render() {
   var tally = total > people ? 'Hlasovalo ' + total : 'Hlasovalo ' + total + ' z ' + people;
   html += '<p class="status">' + tally +
     (q.state === 'open' ? '' : ' &middot; hlasování uzavřeno') + '</p>';
-
-  $('board').innerHTML = html;
+  return html;
 }
 
 function nameOf(uid) {
@@ -200,7 +277,80 @@ function nameOf(uid) {
   return p && p.name ? p.name : 'Neznámý';
 }
 
-/* ---------- pole pro možnosti ---------- */
+function toggleNames() {
+  state.showNames = !state.showNames;
+  localStorage.setItem('hlasovatko.host.names', state.showNames ? 'on' : 'off');
+  applyNames();
+}
+
+function applyNames() {
+  $('board').classList.toggle('hide-names', !state.showNames);
+  $('btn-names').textContent = state.showNames ? 'Skrýt jména' : 'Zobrazit jména';
+}
+
+/* ---------- pruh s otázkami ---------- */
+
+function renderStrip() {
+  var strip = $('strip');
+  var chips = $('chips');
+  var ids = Object.keys(state.questions);
+  if (!ids.length) { strip.hidden = true; chips.innerHTML = ''; return; }
+
+  ids.sort(function (a, b) {
+    return (state.questions[a].createdAt || 0) - (state.questions[b].createdAt || 0);
+  });
+
+  strip.hidden = false;
+  chips.innerHTML = ids.map(function (qid) {
+    var q = state.questions[qid];
+    var draft = q.state === 'draft';
+    var cls = 'chip' + (draft ? ' is-draft' : '') + (qid === state.activeQid ? ' is-active' : '');
+    return '<span class="' + cls + '" data-qid="' + qid + '" title="' + esc(q.text) + '">' +
+      '<span class="mark">' + (draft ? '▶' : '↺') + '</span>' +
+      '<span class="chip-text">' + esc(q.text) + '</span>' +
+      (draft ? '<span class="del" data-del="' + qid + '" title="Smazat koncept">×</span>' : '') +
+    '</span>';
+  }).join('');
+
+  chips.querySelectorAll('[data-qid]').forEach(function (chip) {
+    chip.onclick = function () {
+      var qid = chip.dataset.qid;
+      if (state.questions[qid].state === 'draft') publishDraft(qid);
+      else replayQuestion(qid);
+    };
+  });
+  chips.querySelectorAll('[data-del]').forEach(function (x) {
+    x.onclick = function (e) { e.stopPropagation(); deleteDraft(x.dataset.del); };
+  });
+}
+
+/* ---------- spodní lišta ---------- */
+
+function renderTypes() {
+  var wrap = $('in-types');
+  wrap.innerHTML = '';
+  Object.keys(TYPES).forEach(function (key) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'type' + (key === state.type ? ' is-on' : '');
+    b.textContent = TYPES[key].label;
+    b.onclick = function () { setType(key); };
+    wrap.appendChild(b);
+  });
+}
+
+function setType(key) {
+  state.type = key;
+  renderTypes();
+  $('in-options').hidden = !TYPES[key].ownOptions;
+  $('in-question').focus();
+}
+
+function clearComposer() {
+  $('in-question').value = '';
+  renderOptionInputs(2);
+  $('in-question').focus();
+}
 
 function renderOptionInputs(count, values) {
   var wrap = $('in-options');

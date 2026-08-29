@@ -55,9 +55,31 @@ npx firebase-tools deploy --only database
 
 ## Jak se to používá
 
-- Lektor otevře `/host.html`, založí session, na plátně se ukáže čtyřznakový kód.
-- Účastníci jdou na hlavní adresu, zadají kód a jméno. Session jim vydrží celý workshop.
-- Lektor dole napíše otázku a možnosti, dá **Spustit hlasování**.
+- Lektor otevře `/host.html` a založí session. Na plátně se ukáže velký QR kód
+  a čtyřznakový kód pro ty, co QR nezvládnou.
+- Účastníci naskenují kód a zadají jméno. Session jim vydrží celý workshop.
+- Lektor dole napíše otázku, vybere typ hlasování a dá **Spustit hlasování**
+  (nebo jen Enter).
+
+### Typy hlasování
+
+| Typ | Co zadáš | Co se ukáže na plátně |
+|---|---|---|
+| **A / B / C** | otázku a 2–6 možností | sloupce s procenty a počty |
+| **Ano / Ne** | jen otázku | dva sloupce, zelený a červený |
+| **Škála 1–5** | jen otázku | rozložení a velké číslo průměru |
+
+### Koncepty a historie
+
+**Uložit koncept** odloží otázku na později – objeví se jako čárkovaný štítek
+v pruhu nad spodní lištou a spustíš ji jedním klikem. Ve stejném pruhu jsou
+i všechny odehrané otázky; kliknutím se vrátí na plátno i s výsledky.
+
+### Jména hlasujících
+
+Na plátně jsou standardně skrytá, aby se výsledky vždy vešly na jednu
+obrazovku. Tlačítkem **Zobrazit jména** se u každé možnosti vypíše, kdo ji
+zvolil – hodí se, když chceš o výsledku diskutovat.
 
 ## Lokální vyzkoušení
 

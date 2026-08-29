@@ -50,3 +50,31 @@ function esc(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+// Typy hlasování. Ano/Ne i škála jsou uvnitř obyčejný výběr z možností –
+// liší se jen tím, co se účastníkovi nabídne a jak se výsledek vykreslí.
+var TYPES = {
+  choice: { label: 'A / B / C', ownOptions: true },
+  yesno: { label: 'Ano / Ne', options: ['Ano', 'Ne'] },
+  scale: { label: 'Škála 1–5', options: ['1', '2', '3', '4', '5'] }
+};
+
+function colorFor(type, i) {
+  if (type === 'yesno') return i === 0 ? 'var(--yes)' : 'var(--no)';
+  if (type === 'scale') return 'var(--scale-' + i + ')';
+  return 'var(--opt-' + (i % 6) + ')';
+}
+
+// Popisek možnosti na tlačítku: u výběru písmeno, u škály číslo, u ano/ne nic.
+function markerFor(type, i) {
+  if (type === 'yesno') return '';
+  if (type === 'scale') return String(i + 1);
+  return LETTERS[i];
+}
+
+function renderQr(element, url, cellSize) {
+  var qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  element.innerHTML = qr.createSvgTag({ cellSize: cellSize || 4, margin: 0, scalable: true });
+}

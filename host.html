@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hlasovátko – lektor</title>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body class="host">
 
@@ -17,6 +17,7 @@
 
 <div id="screen-stage" data-screen hidden>
   <header class="topbar">
+    <div class="qr-mini" id="qr-mini"></div>
     <div>
       <div class="label">Kód</div>
       <div class="code" id="out-code"></div>
@@ -32,20 +33,22 @@
     </div>
   </header>
 
-  <main class="board" id="board">
-    <div class="waiting">
-      <strong>Zatím žádná otázka</strong>
-      <p>Napiš ji dole a spusť hlasování.</p>
-    </div>
-  </main>
+  <main class="board" id="board"></main>
+
+  <div class="strip" id="strip" hidden>
+    <div class="chips" id="chips"></div>
+    <button class="ghost small" id="btn-names">Skrýt jména</button>
+  </div>
 
   <footer class="composer">
     <div class="fields">
+      <div class="types" id="in-types"></div>
       <input type="text" id="in-question" placeholder="Otázka, např. Je tu teplo, nebo zima?" autocomplete="off">
       <div class="options" id="in-options"></div>
     </div>
     <div class="actions">
       <button id="btn-start">Spustit hlasování</button>
+      <button class="ghost" id="btn-draft">Uložit koncept</button>
       <button class="ghost" id="btn-close" disabled>Ukončit hlasování</button>
     </div>
   </footer>
@@ -54,8 +57,9 @@
 <script src="js/vendor/firebase-app-compat.js"></script>
 <script src="js/vendor/firebase-auth-compat.js"></script>
 <script src="js/vendor/firebase-database-compat.js"></script>
-<script src="js/firebase-config.js"></script>
-<script src="js/common.js"></script>
-<script src="js/host.js"></script>
+<script src="js/vendor/qrcode.js"></script>
+<script src="js/firebase-config.js?v=2"></script>
+<script src="js/common.js?v=2"></script>
+<script src="js/host.js?v=2"></script>
 </body>
 </html>
