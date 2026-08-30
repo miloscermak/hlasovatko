@@ -8,7 +8,8 @@ Ostrá adresa <https://ted.inspiruj.se> (Netlify), záložní
 Administrace je na `/host.html`.
 
 Podrobnosti, návod k obsluze a historii rozhodnutí má README.md. Tenhle soubor
-je jen to, co je potřeba vědět před sáhnutím do kódu.
+je jen to, co je potřeba vědět před sáhnutím do kódu. `AGENTS.md` je jeho kopie
+pro nástroje, které čtou tenhle název – při změně uprav oba.
 
 ## Kontext použití
 
