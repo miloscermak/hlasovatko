@@ -63,6 +63,8 @@ Koncept je otázka připravená dopředu, kterou lektor spustí jedním klikem.
 - Plátno se nikdy nescrolluje: výsledky se musí vejít na jednu obrazovku.
   Jména hlasujících jsou proto skrytá a lektor si je vyvolá tlačítkem.
 - Naráz běží vždy jen jedno hlasování – spuštění nové otázky zavře předchozí
+- Export čte data načerstvo z databáze: v paměti obrazovky jsou hlasy jen
+  k právě zobrazené otázce
 
 ## Provozní poznámky
 

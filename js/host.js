@@ -27,6 +27,8 @@ function init() {
   $('btn-draft').onclick = saveDraft;
   $('btn-close').onclick = closeQuestion;
   $('btn-names').onclick = toggleNames;
+  $('btn-export-one').onclick = exportQuestion;
+  $('btn-export-all').onclick = exportAll;
   applyNames();
   $('in-question').addEventListener('keydown', onComposerKey);
 
@@ -206,6 +208,7 @@ function deleteDraft(qid) {
 function render() {
   var q = state.question;
   $('btn-close').disabled = !(q && q.state === 'open');
+  $('btn-export-one').disabled = !q;
   $('board').innerHTML = q ? resultsHtml(q) : waitingHtml();
   applyNames();
   if (!q) renderQr($('qr-big'), joinUrl(state.code), 6);
@@ -286,6 +289,134 @@ function toggleNames() {
 function applyNames() {
   $('board').classList.toggle('hide-names', !state.showNames);
   $('btn-names').textContent = state.showNames ? 'Skrýt jména' : 'Zobrazit jména';
+}
+
+/* ---------- export výsledků ---------- */
+
+// Export čte data načerstvo z databáze, ne z paměti obrazovky – hlasy
+// neaktivních otázek totiž v paměti nemáme.
+function loadSession() {
+  return db.ref('sessions/' + state.code).once('value').then(function (snap) {
+    return snap.val() || {};
+  });
+}
+
+function exportQuestion() {
+  if (!state.activeQid) return;
+  var qid = state.activeQid;
+  loadSession().then(function (data) {
+    var order = sortedQuestionIds(data).indexOf(qid) + 1;
+    var question = questionExport(data, qid);
+    download(
+      'hlasovatko-' + state.code + '-' + pad(order) + '-' + slug(question.text) + '.json',
+      { session: state.code, exportedAt: nowIso(), question: question }
+    );
+  }).catch(fail);
+}
+
+function exportAll() {
+  loadSession().then(function (data) {
+    var people = data.participants || {};
+    download(
+      'hlasovatko-' + state.code + '-' + nowIso().slice(0, 10) + '.json',
+      {
+        session: state.code,
+        createdAt: isoTime(data.createdAt),
+        exportedAt: nowIso(),
+        participants: Object.keys(people).map(function (uid) {
+          return { uid: uid, name: people[uid].name, joinedAt: isoTime(people[uid].joinedAt) };
+        }).sort(function (a, b) { return a.name.localeCompare(b.name, 'cs'); }),
+        questions: sortedQuestionIds(data).map(function (qid) {
+          return questionExport(data, qid);
+        })
+      }
+    );
+  }).catch(fail);
+}
+
+function sortedQuestionIds(data) {
+  var questions = data.questions || {};
+  return Object.keys(questions).sort(function (a, b) {
+    return (questions[a].createdAt || 0) - (questions[b].createdAt || 0);
+  });
+}
+
+function questionExport(data, qid) {
+  var q = (data.questions || {})[qid] || {};
+  var votes = (data.votes || {})[qid] || {};
+  var people = data.participants || {};
+  var options = q.options || [];
+  var buckets = options.map(function () { return []; });
+  var list = [];
+
+  Object.keys(votes).forEach(function (uid) {
+    var vote = votes[uid];
+    var name = people[uid] && people[uid].name ? people[uid].name : 'Neznámý';
+    if (buckets[vote.value]) buckets[vote.value].push(name);
+    list.push({
+      uid: uid,
+      name: name,
+      value: vote.value,
+      label: options[vote.value] === undefined ? null : options[vote.value],
+      at: isoTime(vote.at)
+    });
+  });
+
+  var total = list.length;
+  var out = {
+    id: qid,
+    text: q.text || '',
+    type: q.type || '',
+    state: q.state || '',
+    createdAt: isoTime(q.createdAt),
+    totalVotes: total,
+    options: options.map(function (label, i) {
+      return {
+        index: i,
+        label: label,
+        count: buckets[i].length,
+        percent: total ? Math.round(buckets[i].length / total * 100) : 0,
+        voters: buckets[i].sort(function (a, b) { return a.localeCompare(b, 'cs'); })
+      };
+    }),
+    votes: list.sort(function (a, b) { return a.name.localeCompare(b.name, 'cs'); })
+  };
+
+  if (q.type === 'scale' && total) {
+    var weighted = 0;
+    buckets.forEach(function (bucket, i) { weighted += bucket.length * (i + 1); });
+    out.average = Math.round(weighted / total * 100) / 100;
+  }
+  return out;
+}
+
+function download(filename, payload) {
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+function nowIso() { return new Date().toISOString(); }
+
+function isoTime(ms) { return ms ? new Date(ms).toISOString() : null; }
+
+function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+// Z textu otázky udělá použitelný název souboru bez diakritiky.
+function slug(text) {
+  var base = (text || 'otazka').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+    .replace(/-+$/, '');
+  return base || 'otazka';
 }
 
 /* ---------- pruh s otázkami ---------- */

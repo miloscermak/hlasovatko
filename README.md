@@ -76,6 +76,19 @@ npx firebase-tools deploy --only database
 v pruhu nad spodní lištou a spustíš ji jedním klikem. Ve stejném pruhu jsou
 i všechny odehrané otázky; kliknutím se vrátí na plátno i s výsledky.
 
+### Export výsledků
+
+V pruhu vpravo jsou dvě tlačítka:
+
+- **Stáhnout otázku** uloží JSON s právě zobrazenou otázkou. Chceš-li jinou,
+  klikni na její štítek v pruhu a stáhni ji pak.
+- **Stáhnout vše** uloží JSON s celou session – seznam účastníků a všechny
+  otázky včetně hlasů.
+
+Soubor obsahuje u každé možnosti počet, procenta a jmenný seznam hlasujících,
+a k tomu ještě plochý seznam jednotlivých hlasů s časem. U škály se přidá
+i průměr. Časy jsou v ISO formátu, takže se dají rovnou načíst do tabulky.
+
 ### Jména hlasujících
 
 Na plátně jsou standardně skrytá, aby se výsledky vždy vešly na jednu
