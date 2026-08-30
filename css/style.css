@@ -408,3 +408,65 @@ input[type="text"]:focus, textarea:focus {
 .board:not(.hide-names) .bar-row { flex: none; padding-bottom: 0.7rem; }
 
 .strip .tools { display: flex; gap: 0.3rem; flex: none; }
+
+/* ---------- otevřené odpovědi na plátně ---------- */
+
+.answers {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  columns: 320px 4;
+  column-gap: 0.8rem;
+}
+.answers.dense { columns: 250px 5; font-size: 0.9rem; }
+.answers.denser { columns: 200px 6; font-size: 0.78rem; }
+
+.answer {
+  break-inside: avoid;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+  font-size: 1.15em;
+  line-height: 1.35;
+}
+/* Delší odpovědi se na plátně useknou – celé jsou v exportu */
+.answer p {
+  margin: 0 0 0.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 10;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.answer .who { font-size: 0.78em; color: var(--ink-soft); }
+.board.hide-names .answer .who { display: none; }
+
+.hide-answer {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.3rem;
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 0.1em 0.35em;
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0;
+}
+.answer:hover .hide-answer { opacity: 1; }
+.hide-answer:hover { color: var(--danger); }
+
+.status .small { margin-left: 0.6rem; }
+
+/* ---------- otevřená odpověď na mobilu ---------- */
+
+.join textarea { resize: vertical; font-size: 1.05rem; line-height: 1.4; }
+.answer-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.7rem;
+}
+.answer-bar .counter { flex: 1; color: var(--ink-soft); font-size: 0.85rem; }
+.answer-bar button { flex: none; }

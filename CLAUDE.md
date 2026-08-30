@@ -46,8 +46,10 @@ sessions/{kod}/
 
 `kod` je krátký čitelný kód session (např. AB7K) – jde opsat z plátna i naskenovat.
 `type` je jeden z: `choice` | `yesno` | `scale` | `open`.
+U `open` je hlas text (max 1800 znaků, hlídáno i v pravidlech databáze) a lektor
+ho může skrýt příznakem `hidden` – u ostatních typů je hlas index možnosti.
 Ano/Ne i škála jsou uvnitř obyčejný výběr z možností – liší se jen tím, co se
-účastníkovi nabídne a jak se výsledek vykreslí. Hlas je vždy index možnosti.
+účastníkovi nabídne a jak se výsledek vykreslí.
 
 `state` je jeden z: `draft` | `open` | `closed`.
 Koncept je otázka připravená dopředu, kterou lektor spustí jedním klikem.

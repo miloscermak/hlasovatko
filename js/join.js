@@ -114,6 +114,8 @@ function watchQuestion(qid) {
   me.activeQid = qid || null;
   me.question = null;
   me.myVote = null;
+  me.rendered = null;
+  me.touched = false;
   if (!qid) { renderVote(); return; }
 
   var qRef = db.ref('sessions/' + me.code + '/questions/' + qid);
@@ -147,8 +149,12 @@ function renderVote() {
 
   if (!q) {
     body.innerHTML = '<p class="status">Čekej, lektor za chvíli položí otázku.</p>';
+    me.rendered = null;
     return;
   }
+
+  if (q.type === 'open') { renderOpen(q); return; }
+  me.rendered = null;
 
   var open = q.state === 'open';
   var scale = q.type === 'scale';
@@ -183,4 +189,66 @@ function renderVote() {
       btn.onclick = function () { vote(Number(btn.dataset.i)); };
     });
   }
+}
+
+/* ---------- otevřená odpověď ---------- */
+
+// Textové pole se překresluje jen při změně otázky – jinak by uživateli
+// mizelo rozepsané pod rukama pokaždé, když přijde snapshot z databáze.
+function renderOpen(q) {
+  var key = me.activeQid + '|' + q.state;
+  if (me.rendered !== key) {
+    me.rendered = key;
+    var editable = q.state === 'open';
+    $('vote-body').innerHTML =
+      '<h2 class="vote-question">' + esc(q.text) + '</h2>' +
+      '<textarea id="in-answer" rows="7" maxlength="' + MAX_ANSWER + '"' +
+        (editable ? '' : ' disabled') +
+        ' placeholder="Napiš svoji odpověď…"></textarea>' +
+      '<div class="answer-bar">' +
+        '<span class="counter" id="out-counter"></span>' +
+        '<button id="btn-send">Odeslat</button>' +
+      '</div>' +
+      '<p class="status" id="out-answer-status"></p>';
+    $('in-answer').addEventListener('input', function () {
+      me.touched = true;
+      updateOpen();
+    });
+    $('btn-send').onclick = sendAnswer;
+  }
+  updateOpen();
+}
+
+function updateOpen() {
+  var field = $('in-answer');
+  if (!field) return;
+
+  // Uloženou odpověď doplníme jen dokud do pole člověk sám nesáhl.
+  var saved = typeof me.myVote === 'string' ? me.myVote : null;
+  if (!me.touched && saved !== null && field.value !== saved) field.value = saved;
+
+  var text = field.value.trim();
+  var editable = me.question.state === 'open';
+  var unchanged = saved !== null && saved === text;
+
+  $('out-counter').textContent = field.value.length + ' / ' + MAX_ANSWER;
+  $('btn-send').textContent = unchanged ? 'Odesláno' : (saved === null ? 'Odeslat' : 'Uložit změnu');
+  $('btn-send').disabled = !editable || !text || unchanged;
+  $('out-answer-status').textContent = !editable
+    ? 'Hlasování je uzavřené.'
+    : (saved === null
+        ? 'Napiš odpověď a odešli ji.'
+        : 'Odpověď uložena. Můžeš ji ještě upravit.');
+}
+
+function sendAnswer() {
+  var text = $('in-answer').value.trim().slice(0, MAX_ANSWER);
+  if (!text) return;
+  db.ref('sessions/' + me.code + '/votes/' + me.activeQid + '/' + me.uid).set({
+    value: text,
+    at: TS
+  }).then(function () {
+    me.touched = false;
+    updateOpen();
+  }).catch(function (e) { console.error(e); });
 }

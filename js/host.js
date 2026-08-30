@@ -211,6 +211,12 @@ function render() {
   $('btn-export-one').disabled = !q;
   $('board').innerHTML = q ? resultsHtml(q) : waitingHtml();
   applyNames();
+  if (q && q.type === 'open') {
+    $('board').querySelectorAll('[data-hide]').forEach(function (btn) {
+      btn.onclick = function () { hideAnswer(btn.dataset.hide); };
+    });
+    if ($('btn-unhide')) $('btn-unhide').onclick = unhideAll;
+  }
   if (!q) renderQr($('qr-big'), joinUrl(state.code), 6);
 }
 
@@ -229,6 +235,8 @@ function waitingHtml() {
 }
 
 function resultsHtml(q) {
+  if (q.type === 'open') return answersHtml(q);
+
   var options = q.options || [];
   var byOption = options.map(function () { return []; });
   Object.keys(state.votes).forEach(function (uid) {
@@ -273,6 +281,54 @@ function resultsHtml(q) {
   html += '<p class="status">' + tally +
     (q.state === 'open' ? '' : ' &middot; hlasování uzavřeno') + '</p>';
   return html;
+}
+
+// Otevřené odpovědi se na plátno sypou jako bublinky. Lektor může kteroukoli
+// skrýt – to je spolehlivější než automatický filtr sprostých slov.
+function answersHtml(q) {
+  var items = Object.keys(state.votes).map(function (uid) {
+    var vote = state.votes[uid];
+    return {
+      uid: uid,
+      name: nameOf(uid),
+      text: String(vote.value == null ? '' : vote.value),
+      hidden: !!vote.hidden,
+      at: vote.at || 0
+    };
+  }).sort(function (a, b) { return a.at - b.at; });
+
+  var visible = items.filter(function (item) { return !item.hidden; });
+  var density = visible.length > 24 ? ' denser' : (visible.length > 12 ? ' dense' : '');
+
+  var html = '<h1 class="question">' + esc(q.text) + '</h1>';
+  html += '<div class="answers' + density + '">' + visible.map(function (item) {
+    return '<div class="answer">' +
+      '<button class="hide-answer" data-hide="' + item.uid + '" title="Skrýt odpověď">&times;</button>' +
+      '<p>' + esc(item.text) + '</p>' +
+      '<span class="who">' + esc(item.name) + '</span>' +
+    '</div>';
+  }).join('') + '</div>';
+
+  var people = Object.keys(state.participants).length;
+  var buried = items.length - visible.length;
+  html += '<p class="status">Odpovědělo ' + items.length + ' z ' + people +
+    (q.state === 'open' ? '' : ' &middot; uzavřeno') +
+    (buried ? ' <button class="ghost small" id="btn-unhide">vrátit skryté (' + buried + ')</button>' : '') +
+    '</p>';
+  return html;
+}
+
+function hideAnswer(uid) {
+  db.ref('sessions/' + state.code + '/votes/' + state.activeQid + '/' + uid + '/hidden')
+    .set(true).catch(fail);
+}
+
+function unhideAll() {
+  var updates = {};
+  Object.keys(state.votes).forEach(function (uid) {
+    if (state.votes[uid].hidden) updates[uid + '/hidden'] = null;
+  });
+  db.ref('sessions/' + state.code + '/votes/' + state.activeQid).update(updates).catch(fail);
 }
 
 function nameOf(uid) {
@@ -353,13 +409,17 @@ function questionExport(data, qid) {
     var vote = votes[uid];
     var name = people[uid] && people[uid].name ? people[uid].name : 'Neznámý';
     if (buckets[vote.value]) buckets[vote.value].push(name);
-    list.push({
+    var record = {
       uid: uid,
       name: name,
       value: vote.value,
-      label: options[vote.value] === undefined ? null : options[vote.value],
+      label: q.type === 'open'
+        ? String(vote.value == null ? '' : vote.value)
+        : (options[vote.value] === undefined ? null : options[vote.value]),
       at: isoTime(vote.at)
-    });
+    };
+    if (vote.hidden) record.hidden = true;
+    list.push(record);
   });
 
   var total = list.length;

@@ -69,6 +69,15 @@ npx firebase-tools deploy --only database
 | **A / B / C** | otázku a 2–6 možností | sloupce s procenty a počty |
 | **Ano / Ne** | jen otázku | dva sloupce, zelený a červený |
 | **Škála 1–5** | jen otázku | rozložení a velké číslo průměru |
+| **Otevřená odpověď** | jen otázku | odpovědi jako bublinky vedle sebe |
+
+U otevřené odpovědi má účastník textové pole na 1800 znaků a může svou odpověď
+upravovat, dokud je hlasování otevřené. Delší odpovědi se na plátně useknou,
+v exportu jsou vždycky celé.
+
+Kdyby někdo napsal blbost, najedeš na bublinu myší a křížkem ji skryješ.
+Ve stavovém řádku se pak objeví *vrátit skryté*, kdyby sis to rozmyslel.
+Skryté odpovědi zůstávají v exportu s příznakem `hidden`.
 
 ### Koncepty a historie
 

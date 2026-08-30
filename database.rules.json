@@ -21,7 +21,7 @@
             "$uid": {
               // Hlas smí zapsat jen jeho majitel a jen do otevřené otázky.
               ".write": "auth != null && $uid === auth.uid && root.child('sessions').child($code).child('questions').child($qid).child('state').val() === 'open'",
-              ".validate": "newData.hasChildren(['value', 'at'])"
+              ".validate": "newData.hasChildren(['value', 'at']) && (newData.child('value').isNumber() || (newData.child('value').isString() && newData.child('value').val().length <= 1800))"
             }
           }
         }

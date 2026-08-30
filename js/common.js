@@ -56,8 +56,11 @@ function esc(s) {
 var TYPES = {
   choice: { label: 'A / B / C', ownOptions: true },
   yesno: { label: 'Ano / Ne', options: ['Ano', 'Ne'] },
-  scale: { label: 'Škála 1–5', options: ['1', '2', '3', '4', '5'] }
+  scale: { label: 'Škála 1–5', options: ['1', '2', '3', '4', '5'] },
+  open: { label: 'Otevřená odpověď', options: [] }
 };
+
+var MAX_ANSWER = 1800;
 
 function colorFor(type, i) {
   if (type === 'yesno') return i === 0 ? 'var(--yes)' : 'var(--no)';
