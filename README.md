@@ -43,9 +43,10 @@ Deploy nahraje web i pravidla databáze. Adresa bude `https://<projekt>.web.app`
 Repozitář jde připojit v Netlify přes **Add new site → Import an existing project**.
 Build command nech prázdný, publish directory `.` – konfigurace už je v `netlify.toml`.
 
-Po přesunu na vlastní doménu je potřeba jedna věc navíc: ve Firebase konzoli
-**Authentication → Settings → Authorized domains** přidat tu doménu.
-Bez toho se účastníkům nemusí povést anonymní přihlášení.
+Anonymní přihlášení funguje i z vlastní domény bez dalšího nastavování
+(ověřeno na `ted.inspiruj.se`). Kdyby se někdy přidávalo přihlášení přes Google
+nebo e-mail, je potřeba tu doménu doplnit ve Firebase konzoli do
+**Authentication → Settings → Authorized domains**.
 
 Pravidla databáze se přes Netlify nenasazují – ta jedou pořád přes Firebase:
 
